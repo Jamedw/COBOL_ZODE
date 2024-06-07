@@ -20,7 +20,7 @@
 
            88  EXIT-CHOICE VALUE 5.
 
-       *> TESTING
+       *> FOR TESTING
        01  TESTING            PIC X VALUE 'N'.
            88 NO-TESTING      VALUE 'N'.
            88 YES-TESTING     VALUE 'Y'.
