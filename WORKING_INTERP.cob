@@ -35,9 +35,6 @@
        01  TEST-ITEM-3        PIC X VALUE 'C'.
        01  STACK-OUTPUT       PIC X(10).
 
-
-
-
        
        01 TOP-EXPR-PTR POINTER VALUE NULL.
       * POINTER 0 is the one ALL calls return to
@@ -53,8 +50,11 @@
 
        01  INTERP-CHOICE         PIC 9 VALUE 0.
            88  NUMC-CHOICE VALUE 0.
-           88  PLUSC-CHOICE VALUE 1.
+           88  BINOP-CHOICE VALUE 1.
 
+       01  OPERATOR-CHOICE        PIC X(9) VALUE "NA".
+           88 OP-PLUS VALUE "PL".
+           88 OP-MULT VALUE "ML".
 
        LINKAGE SECTION. 
 
@@ -84,8 +84,9 @@
            02 ZODE_ID PIC X VALUE SPACE.
            02 VAL PIC X VALUE SPACE.
 
-       01 PLUSC BASED.
+       01 BINOPC BASED.
            02 ZODE_ID PIC X VALUE SPACE.
+           02 OP PIC X(9) VALUE "NA".
            02 LT POINTER VALUE NULL.
            02 RT POINTER VALUE NULL.
 
@@ -110,7 +111,7 @@
        STOP RUN.
 
        BUILD-AST.
-      *    BUILD THE AST (PlusC (PlusC (NumC 1) (NumC 2)) (NumC 10))
+      *    BUILD THE AST (BinOpC '* (BinOpC '+ (NumC 1) (NumC 2)) (NumC 8))
            PERFORM ALLOCATE-NUMC.
            MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-1
            SET ADDRESS OF NUMC TO WORKING-EXPR-PTR-1
@@ -124,12 +125,13 @@
            MOVE 0 TO ZODE_ID OF NUMC.
            MOVE 2 TO VAL OF NUMC.
 
-           PERFORM ALLOCATE-PLUSC.
+           PERFORM ALLOCATE-BINOPC.
            MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-3
-           SET ADDRESS OF PLUSC TO WORKING-EXPR-PTR-3
-           MOVE 1 TO ZODE_ID OF PLUSC.
-           MOVE WORKING-EXPR-PTR-1 TO LT OF PLUSC
-           MOVE WORKING-EXPR-PTR-2 TO RT OF PLUSC
+           SET ADDRESS OF BINOPC TO WORKING-EXPR-PTR-3
+           MOVE 1 TO ZODE_ID OF BINOPC.
+           MOVE "PL" TO OP OF BINOPC
+           MOVE WORKING-EXPR-PTR-1 TO LT OF BINOPC
+           MOVE WORKING-EXPR-PTR-2 TO RT OF BINOPC
        
       *    PTR-1 is now PLUSC, PTR-2 & PTR-3 are free
            MOVE WORKING-EXPR-PTR-3 TO WORKING-EXPR-PTR-1
@@ -141,12 +143,14 @@
            MOVE 8 TO VAL OF NUMC.
 
 
-           PERFORM ALLOCATE-PLUSC.
+           PERFORM ALLOCATE-BINOPC.
            MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-3
-           SET ADDRESS OF PLUSC TO WORKING-EXPR-PTR-3
-           MOVE 1 TO ZODE_ID OF PLUSC.
-           MOVE WORKING-EXPR-PTR-1 TO LT OF PLUSC
-           MOVE WORKING-EXPR-PTR-2 TO RT OF PLUSC
+           SET ADDRESS OF BINOPC TO WORKING-EXPR-PTR-3
+           MOVE 1 TO ZODE_ID OF BINOPC.
+           MOVE "ML" TO OP OF BINOPC
+
+           MOVE WORKING-EXPR-PTR-1 TO LT OF BINOPC
+           MOVE WORKING-EXPR-PTR-2 TO RT OF BINOPC
 
 
            MOVE WORKING-EXPR-PTR-3 TO TOP-EXPR-PTR.
@@ -160,28 +164,55 @@
                    MOVE VAL OF NUMC TO NUM-ITEM
                    PERFORM PUSH-STACK
 
-               WHEN PLUSC-CHOICE
-                   SET ADDRESS OF PLUSC TO WORKING-EXPR-PTR-0
+               WHEN BINOP-CHOICE
+                   SET ADDRESS OF BINOPC TO WORKING-EXPR-PTR-0
+                   
+                   MOVE OP OF BINOPC TO ALP-ITEM
+                   PERFORM PUSH-STACK
+
                    MOVE RT TO WORKING-EXPR-PTR-0
                    PERFORM INTERP
 
                    MOVE LT TO WORKING-EXPR-PTR-0
                    PERFORM INTERP
+                   
+                   
+                   
+      *            BINOP pushes result to the stack
+                   PERFORM BINOP-EVAL
 
-                   PERFORM POP-STACK
-                   MOVE NUM-ITEM TO WORKING-VALUE-1
-                   PERFORM POP-STACK
-                   MOVE NUM-ITEM TO WORKING-VALUE-2
+     
 
-                   ADD WORKING-VALUE-1 TO WORKING-VALUE-2
-                    GIVING NUM-ITEM
+           END-EVALUATE.
+      * Expects necessary args first, then binop on stack
+       BINOP-EVAL.
+           
+           
+           PERFORM POP-STACK
+           MOVE NUM-ITEM TO WORKING-VALUE-1
+           PERFORM POP-STACK
+           MOVE NUM-ITEM to WORKING-VALUE-2
 
+           PERFORM POP-STACK
+           MOVE ALP-ITEM TO OPERATOR-CHOICE
+           DISPLAY "OP: " ALP-ITEM
+           
+           EVALUATE TRUE
+               WHEN OP-PLUS
+                   ADD WORKING-VALUE-1 TO WORKING-VALUE-2 
+                       GIVING NUM-ITEM
+                   PERFORM PUSH-STACK
+
+               WHEN OP-MULT
+                   MULTIPLY WORKING-VALUE-1 BY WORKING-VALUE-2 
+                       GIVING NUM-ITEM
                    PERFORM PUSH-STACK
 
            END-EVALUATE.
+           
 
-       ALLOCATE-PLUSC.
-           ALLOCATE PLUSC
+       ALLOCATE-BINOPC.
+           ALLOCATE BINOPC
                RETURNING WORKING-EXPR-PTR-0.
 
        ALLOCATE-NUMC.
