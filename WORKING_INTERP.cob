@@ -50,7 +50,19 @@
 
        MAIN.
 
-      *    BUILD THE AST (PlusC (NumC 1) (NumC 2))
+      *    
+           PERFORM BUILD-AST.
+
+           MOVE TOP-EXPR-PTR to WORKING-EXPR-PTR-0
+           PERFORM INTERP.
+           
+           DISPLAY "RESULT: "
+           DISPLAY WORKING-VALUE-0
+           
+       STOP RUN.
+
+       BUILD-AST.
+      *    BUILD THE AST (PlusC (PlusC (NumC 1) (NumC 2)) (NumC 10))
            PERFORM ALLOCATE-NUMC.
            MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-1
            SET ADDRESS OF NUMC TO WORKING-EXPR-PTR-1
@@ -70,18 +82,26 @@
            MOVE 1 TO ZODE_ID OF PLUSC.
            MOVE WORKING-EXPR-PTR-1 TO LT OF PLUSC
            MOVE WORKING-EXPR-PTR-2 TO RT OF PLUSC
+       
+      *    PTR-1 is now PLUSC, PTR-2 & PTR-3 are free
+           MOVE WORKING-EXPR-PTR-3 TO WORKING-EXPR-PTR-1
 
-            
-           MOVE WORKING-EXPR-PTR-3 TO TOP-EXPR-PTR
+           PERFORM ALLOCATE-NUMC.
+           MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-2
+           SET ADDRESS OF NUMC TO WORKING-EXPR-PTR-2
+           MOVE 0 TO ZODE_ID OF NUMC.
+           MOVE 8 TO VAL OF NUMC.
 
 
-           MOVE TOP-EXPR-PTR to WORKING-EXPR-PTR-0
-           PERFORM INTERP.
-           
-           DISPLAY "RESULT: "
-           DISPLAY WORKING-VALUE-0
-           
-       STOP RUN.
+           PERFORM ALLOCATE-PLUSC.
+           MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-3
+           SET ADDRESS OF PLUSC TO WORKING-EXPR-PTR-3
+           MOVE 1 TO ZODE_ID OF PLUSC.
+           MOVE WORKING-EXPR-PTR-1 TO LT OF PLUSC
+           MOVE WORKING-EXPR-PTR-2 TO RT OF PLUSC
+
+
+           MOVE WORKING-EXPR-PTR-3 TO TOP-EXPR-PTR.
           
        INTERP.
            SET ADDRESS OF GEN_ZODE TO WORKING-EXPR-PTR-0.
@@ -90,6 +110,8 @@
                WHEN NUMC-CHOICE
                    SET ADDRESS OF NUMC TO WORKING-EXPR-PTR-0
                    MOVE VAL OF NUMC TO WORKING-VALUE-0
+                   DISPLAY "HIT NUMC:"
+                   DISPLAY WORKING-VALUE-0
 
                WHEN PLUSC-CHOICE
                    SET ADDRESS OF PLUSC TO WORKING-EXPR-PTR-0
@@ -98,8 +120,10 @@
                    MOVE WORKING-VALUE-0 TO WORKING-VALUE-1
                    MOVE LT TO WORKING-EXPR-PTR-0
                    PERFORM INTERP
-                   
-                   ADD WORKING-VALUE-1 TO WORKING-VALUE-0
+                   MOVE WORKING-VALUE-0 TO WORKING-VALUE-2
+                   ADD WORKING-VALUE-1 TO WORKING-VALUE-2
+                    GIVING WORKING-VALUE-0
+
            END-EVALUATE.
 
        ALLOCATE-PLUSC.
