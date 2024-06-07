@@ -120,7 +120,7 @@
            
 
        BUILD-AST.
-      *    BUILD THE AST (BinOpC '* (BinOpC '+ (NumC 1) (NumC 2)) (BinOpC '/ (NumC 4) (NumC 2)))
+      *    BUILD THE AST (BinOpC '* (BinOpC '+ (NumC 1) (NumC 2)) (NumC 8)))
            PERFORM ALLOCATE-NUMC.
            MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-1
            SET ADDRESS OF NUMC TO WORKING-EXPR-PTR-1
@@ -144,7 +144,8 @@
        
       *    PTR-1 is now PLUSC, PTR-2 & PTR-3 are free
            MOVE WORKING-EXPR-PTR-3 TO WORKING-EXPR-PTR-1
-
+           
+      *    (NumC 8)
            PERFORM ALLOCATE-NUMC.
            MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-2
            SET ADDRESS OF NUMC TO WORKING-EXPR-PTR-2
