@@ -25,8 +25,8 @@
 
        *> FOR TESTING
        01  TESTING            PIC X VALUE 'N'.
-           88 NO-TESTING      VALUE 'N'.
-           88 YES-TESTING     VALUE 'Y'.
+           88 NO-READING      VALUE 'N'.
+           88 YES-READING     VALUE 'Y'.
        01  TEST-STATUS        PIC X VALUE 'N'.
            88  TEST-PASSED    VALUE 'Y'.
            88  TEST-FAILED    VALUE 'N'.
@@ -95,9 +95,15 @@
 
 
        MAIN.
-           SET YES-TESTING TO TRUE
-          
+           SET NO-READING TO TRUE
+
+           PERFORM TEST-STACK
+           PERFORM TEST-INTERP
       *    
+           
+       STOP RUN.
+
+       TEST-INTERP.
            PERFORM BUILD-AST.
 
            MOVE TOP-EXPR-PTR to WORKING-EXPR-PTR-0
@@ -105,13 +111,16 @@
            
            PERFORM POP-STACK
 
+           IF NUM-ITEM = 24
+               DISPlAY "TEST INTERP PASSED"
+           END-IF
+
            DISPLAY "RESULT: "
-           DISPLAY NUM-ITEM
+           DISPLAY NUM-ITEM.
            
-       STOP RUN.
 
        BUILD-AST.
-      *    BUILD THE AST (BinOpC '* (BinOpC '+ (NumC 1) (NumC 2)) (NumC 8))
+      *    BUILD THE AST (BinOpC '* (BinOpC '+ (NumC 1) (NumC 2)) (BinOpC '/ (NumC 4) (NumC 2)))
            PERFORM ALLOCATE-NUMC.
            MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-1
            SET ADDRESS OF NUMC TO WORKING-EXPR-PTR-1
@@ -195,7 +204,6 @@
 
            PERFORM POP-STACK
            MOVE ALP-ITEM TO OPERATOR-CHOICE
-           DISPLAY "OP: " ALP-ITEM
            
            EVALUATE TRUE
                WHEN OP-PLUS
@@ -225,7 +233,7 @@
                RETURNING CURR-NODE-PTR. 
        
        PUSH-STACK.
-           IF NO-TESTING
+           IF YES-READING
                   DISPLAY "Enter value to push: "
                   ACCEPT ALP-ITEM
            END-IF
@@ -254,7 +262,7 @@
                MOVE ALP-VAL OF CURR-NODE TO ALP-ITEM
                MOVE PTR-VAL OF CURR-NODE TO PTR-ITEM
 
-               IF NO-TESTING
+               IF YES-READING
                   DISPLAY "Popped ALP value: " ALP-ITEM
                   DISPLAY "Popped NUM value: " NUM-ITEM
                   DISPLAY "Popped PTR value: " PTR-ITEM
@@ -283,7 +291,6 @@
            END-IF.
 
        TEST-STACK.
-           SET YES-TESTING TO TRUE
            DISPLAY "Running Stack Tests..."
 
            PERFORM TEST-PUSH-POP
@@ -305,9 +312,12 @@
        TEST-PUSH-POP.
            PERFORM CLEAR-STACK
            MOVE 'A' TO ALP-ITEM
+           MOVE 1 TO NUM-ITEM
+           MOVE WORKING-EXPR-PTR-0 TO PTR-ITEM
            PERFORM PUSH-STACK
            PERFORM POP-STACK
-           IF ALP-ITEM = 'A'
+           IF ALP-ITEM = 'A' AND NUM-ITEM = 1 
+               AND PTR-ITEM = WORKING-EXPR-PTR-0
                SET TEST-PASSED TO TRUE
            ELSE
                SET TEST-FAILED TO TRUE
