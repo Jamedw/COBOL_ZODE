@@ -1,3 +1,4 @@
+       *> Stack implementation made with linked list
        IDENTIFICATION DIVISION.
        PROGRAM-ID. MyStack.
 
@@ -5,14 +6,15 @@
 
        DATA DIVISION.
        WORKING-STORAGE SECTION.
-       01  HEAD-PTR       POINTER VALUE NULL.
-       01  TEMP-NODE-PTR  POINTER VALUE NULL.
-       01  CURR-NODE-PTR  POINTER VALUE NULL. 
-       01  STACK-STATUS   PIC X VALUE 'Y'.
+
+       01  HEAD-PTR    POINTER VALUE NULL. *> Top of stack
+       01  TEMP-NODE-PTR   POINTER VALUE NULL.
+       01  CURR-NODE-PTR   POINTER VALUE NULL. 
+       01  STACK-STATUS    PIC X VALUE 'Y'.
            88  STACK-EMPTY VALUE 'Y'.
            88  STACK-NOT-EMPTY VALUE 'N'.
-       01  ITEM           PIC X VALUE SPACE.
-       01  CHOICE         PIC 9 VALUE 0.
+       01  ITEM    PIC X VALUE SPACE. *> Item to put into stack
+       01  CHOICE  PIC 9 VALUE 0.
            88  PUSH-CHOICE VALUE 1.
            88  POP-CHOICE VALUE 2.
            88  DISPLAY-CHOICE VALUE 3.
@@ -20,18 +22,19 @@
 
            88  EXIT-CHOICE VALUE 5.
 
-       *> FOR TESTING
-       01  TESTING            PIC X VALUE 'N'.
-           88 NO-TESTING      VALUE 'N'.
-           88 YES-TESTING     VALUE 'Y'.
-       01  TEST-STATUS        PIC X VALUE 'N'.
-           88  TEST-PASSED    VALUE 'Y'.
-           88  TEST-FAILED    VALUE 'N'.
-       01  TEST-ITEM-1        PIC X VALUE 'A'.
-       01  TEST-ITEM-2        PIC X VALUE 'B'.
-       01  TEST-ITEM-3        PIC X VALUE 'C'.
-       01  STACK-OUTPUT       PIC X(10).
+       *> For testing
+       01  READING PIC X VALUE 'N'.
+           88 NO-READING   VALUE 'N'.
+           88 YES-READING  VALUE 'Y'.
+       01  TEST-STATUS PIC X VALUE 'N'.
+           88  TEST-PASSED VALUE 'Y'.
+           88  TEST-FAILED VALUE 'N'.
+       01  TEST-ITEM-1 PIC X VALUE 'A'.
+       01  TEST-ITEM-2 PIC X VALUE 'B'.
+       01  TEST-ITEM-3 PIC X VALUE 'C'.
+       01  STACK-OUTPUT    PIC X(10).
 
+       *> For dynamic allocation 
        LINKAGE SECTION. 
        01 CURR-NODE BASED.
            02  NXT POINTER VALUE NULL.
@@ -45,6 +48,7 @@
        
        PERFORM MAIN.
 
+       *> Main function to ask user what they want to do. 
        MAIN.
            DISPLAY "1. Push to Stack"
            DISPLAY "2. Pop from Stack"
@@ -76,8 +80,9 @@
            ALLOCATE CURR-NODE
                RETURNING CURR-NODE-PTR. 
        
+       *> Function to push "ITEM" onto top of stack
        PUSH-STACK.
-           IF NO-TESTING
+           IF YES-READING
                   DISPLAY "Enter value to push: "
                   ACCEPT ITEM
            END-IF
@@ -93,6 +98,7 @@
                SET HEAD-PTR TO CURR-NODE-PTR
            END-IF.
 
+       *> Remove top value of stack. It will be accessible in "ITEM" 
        POP-STACK.
            IF STACK-EMPTY
                DISPLAY "Stack is empty."
@@ -108,6 +114,7 @@
                END-IF
            END-IF.
        
+       *> Show contents of stack
        DISPLAY-STACK.
            IF STACK-EMPTY
                DISPLAY "Stack is empty."
@@ -122,8 +129,20 @@
                END-PERFORM
            END-IF.
 
+       *> Free the stack
+       CLEAR-STACK.
+           SET TEMP-NODE-PTR TO HEAD-PTR
+           PERFORM UNTIL TEMP-NODE-PTR = NULL
+               SET CURR-NODE-PTR TO TEMP-NODE-PTR
+               SET ADDRESS OF CURR-NODE TO CURR-NODE-PTR
+               SET TEMP-NODE-PTR TO NXT OF CURR-NODE
+               FREE CURR-NODE
+           END-PERFORM
+           SET STACK-EMPTY TO TRUE.
+
+       *> Testing
        TEST-STACK.
-           SET YES-TESTING TO TRUE
+           SET NO-READING TO TRUE
            DISPLAY "Running Stack Tests..."
 
            PERFORM TEST-PUSH-POP
@@ -140,8 +159,13 @@
                DISPLAY "TEST-MULTIPLE-VALUES PASSED"
            ELSE
                DISPLAY "TEST-MULTIPLE-VALUES FAILED"
-           END-IF.
+           END-IF
+           
+           SET TEST-FAILED TO TRUE
 
+           SET YES-READING TO TRUE.
+       
+       *> Check single push and pop works as expected. 
        TEST-PUSH-POP.
            PERFORM CLEAR-STACK
            MOVE 'A' TO ITEM
@@ -153,6 +177,7 @@
                SET TEST-FAILED TO TRUE
            END-IF.
 
+       *> Check multiple pushes and pops work as expected. 
        TEST-MULTIPLE-VALUES.
            PERFORM CLEAR-STACK
            MOVE TEST-ITEM-1 TO ITEM
@@ -164,30 +189,17 @@
 
            PERFORM POP-STACK
            IF ITEM NOT = TEST-ITEM-3
-               DISPLAY "3 FAILED"
                SET TEST-FAILED TO TRUE
            END-IF
            PERFORM POP-STACK
            IF ITEM NOT = TEST-ITEM-2
-               DISPLAY ITEM 'AND' TEST-ITEM-2
                SET TEST-FAILED TO TRUE
            END-IF
            PERFORM POP-STACK
            IF ITEM = TEST-ITEM-1
                SET TEST-PASSED TO TRUE
            ELSE
-               DISPLAY ITEM 'AND' TEST-ITEM-1
                SET TEST-FAILED TO TRUE
            END-IF.
-
-       CLEAR-STACK.
-           SET TEMP-NODE-PTR TO HEAD-PTR
-           PERFORM UNTIL TEMP-NODE-PTR = NULL
-               SET CURR-NODE-PTR TO TEMP-NODE-PTR
-               SET ADDRESS OF CURR-NODE TO CURR-NODE-PTR
-               SET TEMP-NODE-PTR TO NXT OF CURR-NODE
-               FREE CURR-NODE
-           END-PERFORM
-           SET STACK-EMPTY TO TRUE.
 
        END PROGRAM MyStack.
