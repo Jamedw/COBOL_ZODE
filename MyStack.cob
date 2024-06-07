@@ -22,7 +22,7 @@
 
            88  EXIT-CHOICE VALUE 5.
 
-       *> FOR TESTING
+       *> For testing
        01  READING PIC X VALUE 'N'.
            88 NO-READING   VALUE 'N'.
            88 YES-READING  VALUE 'Y'.
@@ -34,6 +34,7 @@
        01  TEST-ITEM-3 PIC X VALUE 'C'.
        01  STACK-OUTPUT    PIC X(10).
 
+       *> For dynamic allocation 
        LINKAGE SECTION. 
        01 CURR-NODE BASED.
            02  NXT POINTER VALUE NULL.
@@ -138,7 +139,7 @@
                FREE CURR-NODE
            END-PERFORM
            SET STACK-EMPTY TO TRUE.
-           
+
        *> Testing
        TEST-STACK.
            SET YES-READING TO TRUE
@@ -159,8 +160,12 @@
            ELSE
                DISPLAY "TEST-MULTIPLE-VALUES FAILED"
            END-IF
-           SET NO-READING TO TRUE.
+           
+           SET TEST-FAILED TO TRUE
 
+           SET NO-READING TO TRUE.
+       
+       *> Check single push and pop works as expected. 
        TEST-PUSH-POP.
            PERFORM CLEAR-STACK
            MOVE 'A' TO ITEM
@@ -172,6 +177,7 @@
                SET TEST-FAILED TO TRUE
            END-IF.
 
+       *> Check multiple pushes and pops work as expected. 
        TEST-MULTIPLE-VALUES.
            PERFORM CLEAR-STACK
            MOVE TEST-ITEM-1 TO ITEM
@@ -183,19 +189,16 @@
 
            PERFORM POP-STACK
            IF ITEM NOT = TEST-ITEM-3
-               DISPLAY "3 FAILED"
                SET TEST-FAILED TO TRUE
            END-IF
            PERFORM POP-STACK
            IF ITEM NOT = TEST-ITEM-2
-               DISPLAY ITEM 'AND' TEST-ITEM-2
                SET TEST-FAILED TO TRUE
            END-IF
            PERFORM POP-STACK
            IF ITEM = TEST-ITEM-1
                SET TEST-PASSED TO TRUE
            ELSE
-               DISPLAY ITEM 'AND' TEST-ITEM-1
                SET TEST-FAILED TO TRUE
            END-IF.
 
