@@ -82,7 +82,7 @@
        
        *> Function to push "ITEM" onto top of stack
        PUSH-STACK.
-           IF NO-READING
+           IF YES-READING
                   DISPLAY "Enter value to push: "
                   ACCEPT ITEM
            END-IF
@@ -142,7 +142,7 @@
 
        *> Testing
        TEST-STACK.
-           SET YES-READING TO TRUE
+           SET NO-READING TO TRUE
            DISPLAY "Running Stack Tests..."
 
            PERFORM TEST-PUSH-POP
@@ -163,7 +163,7 @@
            
            SET TEST-FAILED TO TRUE
 
-           SET NO-READING TO TRUE.
+           SET YES-READING TO TRUE.
        
        *> Check single push and pop works as expected. 
        TEST-PUSH-POP.
