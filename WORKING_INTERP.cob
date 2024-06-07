@@ -1,0 +1,111 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. AST_BUILD.
+
+       ENVIRONMENT DIVISION.
+
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       
+       01 TOP-EXPR-PTR POINTER VALUE NULL.
+      * POINTER 0 is the one ALL calls return to
+       01 WORKING-EXPR-PTR-0 POINTER VALUE NULL.
+       01 WORKING-EXPR-PTR-1 POINTER VALUE NULL.
+       01 WORKING-EXPR-PTR-2 POINTER VALUE NULL.
+       01 WORKING-EXPR-PTR-3 POINTER VALUE NULL.
+       
+      * WORKING-VALUE-0 is set in ALL language terminal calls
+       01 WORKING-VALUE-0 PIC S9 VALUE -1.
+       01 WORKING-VALUE-1 PIC S9 VALUE -1.
+       01 WORKING-VALUE-2 PIC S9 VALUE -1.
+
+       01  INTERP-CHOICE         PIC 9 VALUE 0.
+           88  NUMC-CHOICE VALUE 0.
+           88  PLUSC-CHOICE VALUE 1.
+
+
+       LINKAGE SECTION. 
+       
+      
+      * JANKY TYPE CASTING
+
+      * ZODE_ID = 0 = NUMC
+      * ZODE_ID = 1 = PLUSC
+
+       01 GEN_ZODE BASED.
+           02 ZODE_ID PIC X VALUE SPACE.
+
+
+       01 NUMC BASED.
+           02 ZODE_ID PIC X VALUE SPACE.
+           02 VAL PIC X VALUE SPACE.
+
+       01 PLUSC BASED.
+           02 ZODE_ID PIC X VALUE SPACE.
+           02 LT POINTER VALUE NULL.
+           02 RT POINTER VALUE NULL.
+
+       PROCEDURE DIVISION.
+       PERFORM MAIN.
+
+
+       MAIN.
+
+      *    BUILD THE AST (PlusC (NumC 1) (NumC 2))
+           PERFORM ALLOCATE-NUMC.
+           MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-1
+           SET ADDRESS OF NUMC TO WORKING-EXPR-PTR-1
+           MOVE 0 TO ZODE_ID OF NUMC.
+           MOVE 1 TO VAL OF NUMC.
+           
+
+           PERFORM ALLOCATE-NUMC.
+           MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-2
+           SET ADDRESS OF NUMC TO WORKING-EXPR-PTR-2
+           MOVE 0 TO ZODE_ID OF NUMC.
+           MOVE 2 TO VAL OF NUMC.
+
+           PERFORM ALLOCATE-PLUSC.
+           MOVE WORKING-EXPR-PTR-0 TO WORKING-EXPR-PTR-3
+           SET ADDRESS OF PLUSC TO WORKING-EXPR-PTR-3
+           MOVE 1 TO ZODE_ID OF PLUSC.
+           MOVE WORKING-EXPR-PTR-1 TO LT OF PLUSC
+           MOVE WORKING-EXPR-PTR-2 TO RT OF PLUSC
+
+            
+           MOVE WORKING-EXPR-PTR-3 TO TOP-EXPR-PTR
+
+
+           MOVE TOP-EXPR-PTR to WORKING-EXPR-PTR-0
+           PERFORM INTERP.
+           
+           DISPLAY "RESULT: "
+           DISPLAY WORKING-VALUE-0
+           
+       STOP RUN.
+          
+       INTERP.
+           SET ADDRESS OF GEN_ZODE TO WORKING-EXPR-PTR-0.
+           MOVE ZODE_ID OF GEN_ZODE TO INTERP-CHOICE
+           EVALUATE TRUE
+               WHEN NUMC-CHOICE
+                   SET ADDRESS OF NUMC TO WORKING-EXPR-PTR-0
+                   MOVE VAL OF NUMC TO WORKING-VALUE-0
+
+               WHEN PLUSC-CHOICE
+                   SET ADDRESS OF PLUSC TO WORKING-EXPR-PTR-0
+                   MOVE RT TO WORKING-EXPR-PTR-0
+                   PERFORM INTERP
+                   MOVE WORKING-VALUE-0 TO WORKING-VALUE-1
+                   MOVE LT TO WORKING-EXPR-PTR-0
+                   PERFORM INTERP
+                   
+                   ADD WORKING-VALUE-1 TO WORKING-VALUE-0
+           END-EVALUATE.
+
+       ALLOCATE-PLUSC.
+           ALLOCATE PLUSC
+               RETURNING WORKING-EXPR-PTR-0.
+
+       ALLOCATE-NUMC.
+           ALLOCATE NUMC
+               RETURNING WORKING-EXPR-PTR-0.
